@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neumorphic Calculator</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e0e5ec">
+<style>
+.pwa-popup{position:fixed;bottom:-300px;left:50%;transform:translateX(-50%);width:92%;max-width:400px;background:#fff;border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,0.25);padding:18px;transition:bottom 0.5s ease;z-index:9999}
+.pwa-popup.show{bottom:20px}
+.pwa-popup-content{display:flex;align-items:center;gap:12px}
+.pwa-popup-content img{width:48px;height:48px;border-radius:12px}
+.pwa-popup-content h4{margin:0;font-size:15px}
+.pwa-popup-content p{margin:2px 0 0 0;font-size:12px;color:#666}
+.pwa-popup-buttons{display:flex;gap:8px;margin-left:auto}
+.pwa-popup-buttons button{padding:7px 12px;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+#pwa-cancel{background:#e0e5ec;color:#555}
+#pwa-install{background:#4f46e5;color:#fff}
+#shortcut-popup{background:#fff;position:fixed;bottom:-400px;left:50%;transform:translateX(-50%);width:92%;max-width:400px;border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,0.25);padding:20px;transition:bottom 0.5s ease;z-index:10000}
+#shortcut-popup.show{bottom:20px}
+#shortcut-popup h3{margin:0 0 8px 0;font-size:16px}
+#shortcut-popup ol{margin:8px 0;padding-left:20px;font-size:13px;color:#333;line-height:1.6}
+#shortcut-popup button{margin-top:10px;padding:8px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+#close-shortcut{background:#e0e5ec}
+.top-bar{display:flex;justify-content:space-between;padding:10px;gap:8px}
+.top-bar button{padding:6px 10px;font-size:12px;border:none;border-radius:8px;background:#e0e5ec;cursor:pointer}
+
+body{
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  padding-top:60px;
+}
+.calculator-container{
+  margin:0 auto !important;
+  width:92% !important;
+  max-width:360px !important;
+}
+.top-bar{
+  position:fixed !important;
+  top:8px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  width:92% !important;
+  max-width:400px !important;
+  margin:0 !important;
+  z-index:9998 !important;
+  justify-content:center !important;
+  background:transparent !important;
+}
+.top-bar button{
+  background:#fff !important;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1) !important;
+  font-weight:600 !important;
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<button id="btn-show-pwa">Install App (no badge)</button>
+<button id="btn-show-shortcut">Add Shortcut (with badge)</button>
+</div>
+
+<div class="calculator-container">
+<div class="display"><div id="previous-operand" class="previous-operand"></div><div id="current-operand" class="current-operand">0</div></div>
+<div class="buttons-grid">
+<button class="btn function" data-action="clear">AC</button><button class="btn function" data-action="delete">DEL</button><button class="btn operator" data-action="sqrt">√</button><button class="btn operator" data-action="pow">x²</button><button class="btn operator" data-action="percent">%</button><button class="btn operator" data-operation="÷">÷</button><button class="btn operator" data-operation="×">×</button><button class="btn operator" data-operation="-">-</button><button class="btn number" data-number="7">7</button><button class="btn number" data-number="8">8</button><button class="btn number" data-number="9">9</button><button class="btn operator" data-operation="+">+</button><button class="btn number" data-number="4">4</button><button class="btn number" data-number="5">5</button><button class="btn number" data-number="6">6</button><button class="btn number" data-number="1">1</button><button class="btn number" data-number="2">2</button><button class="btn number" data-number="3">3</button><button class="btn number zero" data-number="0">0</button><button class="btn number" data-number=".">.</button><button class="btn equals" data-action="calculate">=</button>
+</div>
+</div>
+
+<!-- POPUP A: PWA INSTALL (real app, no Chrome badge) -->
+<div id="pwa-popup" class="pwa-popup">
+  <div class="pwa-popup-content">
+    <img src="icon-192.png"><div><h4>Install Calculator App?</h4><p>PWA - icon only, opens like real app</p></div>
+    <div class="pwa-popup-buttons"><button id="pwa-cancel">Cancel</button><button id="pwa-install">Install</button></div>
+  </div>
+</div>
+
+<!-- POPUP B: SHORTCUT (with Chrome badge) - cannot trigger Chrome, only instruction -->
+<div id="shortcut-popup">
+  <h3>Add Shortcut to Home Screen</h3>
+  <p style="font-size:12px;color:#666;margin:0">This will show Cal icon + small Chrome badge and open inside Chrome</p>
+  <ol>
+    <li>Tap <b>⋮ (3 dots)</b> top-right in Chrome</li>
+    <li>Tap <b>Save and share</b> or <b>Add to Home screen</b></li>
+    <li>Tap <b>Create shortcut</b> or <b>Add to Home screen</b></li>
+    <li>Tap <b>Add</b> → You will see icon with Chrome badge</li>
+  </ol>
+  <button id="close-shortcut">Got it</button>
+</div>
+
+<script src="script.js"></script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
+
+let deferredPrompt=null;
+const pwaPopup=document.getElementById('pwa-popup');
+const shortcutPopup=document.getElementById('shortcut-popup');
+
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault(); // Blocks Chrome's own popup for PWA
+  deferredPrompt=e;
+  setTimeout(()=>pwaPopup.classList.add('show'),3000); // Your 3000 reasoning
+});
+
+document.getElementById('pwa-install').onclick=async()=>{
+  if(deferredPrompt){deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null;}
+  pwaPopup.classList.remove('show');
+};
+document.getElementById('pwa-cancel').onclick=()=>pwaPopup.classList.remove('show');
+
+// Buttons to manually show for learning
+document.getElementById('btn-show-pwa').onclick=()=>{
+  if(deferredPrompt){pwaPopup.classList.add('show');} else {alert('PWA already installed or Chrome blocked prompt. Uninstall Cal first to see PWA popup again.');}
+};
+document.getElementById('btn-show-shortcut').onclick=()=>{shortcutPopup.classList.add('show');};
+document.getElementById('close-shortcut').onclick=()=>shortcutPopup.classList.remove('show');
+
+// Auto-show PWA popup after 3 sec on first visit
+window.addEventListener('load',()=>{setTimeout(()=>{if(!deferredPrompt){/* already installed, don't auto */} },3000);});
+</script>
+</body>
+</html>
