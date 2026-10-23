@@ -1,5 +1,5 @@
-const CACHE='calc-v5-final';
-const URLS=['/calculator/','/calculator/index.html','/calculator/style.css','/calculator/script.js','/calculator/manifest.json','/calculator/icon-192.png','/calculator/icon-512.png'];
+const CACHE='calc-v6';
+const URLS=['./','./index.html','./style.css','./script.js','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));
   self.skipWaiting();
