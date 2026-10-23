@@ -1,5 +1,5 @@
-const CACHE='calc-v3';
-const URLS=['./','index.html','style.css','script.js','manifest.json','icon-192.png','icon-512.png'];
+const CACHE='calc-v5-final';
+const URLS=['/calculator/','/calculator/index.html','/calculator/style.css','/calculator/script.js','/calculator/manifest.json','/calculator/icon-192.png','/calculator/icon-512.png'];
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));
   self.skipWaiting();
@@ -9,5 +9,5 @@ self.addEventListener('activate', e=>{
   self.clients.claim();
 });
 self.addEventListener('fetch', e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('index.html'))));
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
 });
